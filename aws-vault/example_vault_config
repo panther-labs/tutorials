@@ -1,0 +1,5 @@
+###### web-admin #####
+[profile web-admin]
+source_profile = identity
+role_arn = arn:aws:iam::123456789012:role/WebAdmin
+mfa_serial = arn:aws:iam::234567890123:mfa/franklin

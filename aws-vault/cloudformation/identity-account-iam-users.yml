@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: IAM user accounts
+
+Resources:
+  Franklin:
+      Type: AWS::IAM::User
+      Properties:
+        UserName: franklin
+
+Outputs:
+  FranklinUserName:
+    Value: !Ref Franklin
+    Export:
+      Name: FranklinUserName

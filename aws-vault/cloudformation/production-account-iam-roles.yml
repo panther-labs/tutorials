@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: IAM roles to perform specific actions
+
+Mappings:
+  Accounts:
+    Identity:
+      AccountId: '234567890123'
+
+Resources:
+  WebAdminRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              # The account that can assume the role
+              AWS: !FindInMap [ Accounts, Identity, AccountId ]
+            Action: sts:AssumeRole
+            Condition:
+              Bool:
+                # Enforce MFA and SSL
+                aws:MultiFactorAuthPresent: true
+                aws:SecureTransport: true
+              NumericLessThan:
+                aws:MultiFactorAuthAge: 3600
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkFullAccess
+      # The temporary credentials last for one hour
+      MaxSessionDuration: 3600
+      RoleName: WebAdmin

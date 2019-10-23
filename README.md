@@ -1,10 +1,7 @@
 # Panther Labs Tutorials
-A Collection of Various Cloud Security Tutorials
-
-## Contents
 
 The code samples in this repo relate to the following blog posts:
-* [Securing Multi-Account Access on AWS](https://medium.com/panther-labs/tutorial-securing-multi-account-access-on-aws-763c968bd4ce): `aws-vault`
+* [Securing Multi-Account Access on AWS](https://medium.com/panther-labs/tutorial-securing-multi-account-access-on-aws-763c968bd4ce): [aws-vault](https://github.com/panther-labs/tutorials/tree/master/aws-vault)
 
 ## Usage
 

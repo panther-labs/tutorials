@@ -1,8 +1,6 @@
 # Panther Labs Tutorials
 
-A collection of code samples related to Panther's blog posts:
-
-| Blog Post        | Code           
+| Blog        | Code           
 | ------------- |:-------------:|
 | [Securing Multi-Account Access on AWS](https://medium.com/panther-labs/tutorial-securing-multi-account-access-on-aws-763c968bd4ce)      | [aws-vault](https://github.com/panther-labs/tutorials/tree/master/aws-vault) |
 

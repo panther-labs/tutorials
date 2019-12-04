@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: S3 Bucket, IAM Instance Profile and Role for Security Logs.
+
+Parameters:
+  OrgPrefix:
+    Type: String
+    Description: The prefix used for AWS resources
+
+Resources:
+  SecurityDataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::AccountId}-security-data-${AWS::Region}
+      AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Sub ${OrgPrefix}S3SecurityData
+      Roles:
+        - !Ref InstanceProfileAssumeRole
+
+  InstanceProfileAssumeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${OrgPrefix}S3SecurityDataAssumeRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AssumeS3Role
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: sts:AssumeRole
+                Resource: !GetAtt S3WriteDataRole.Arn
+
+  S3WriteDataRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${OrgPrefix}S3WriteSecurityData
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: PutAndListSecurityData
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              -
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt SecurityDataBucket.Arn
+              -
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObject*
+                  - s3:PutObject*
+                Resource: !Sub ${SecurityDataBucket.Arn}/*

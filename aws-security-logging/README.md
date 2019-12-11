@@ -1,8 +1,6 @@
 # AWS Security Logging Fundamentals - CloudTrail
 
-*A deep dive into AWS CloudTrail - https://github.com/panther-labs/tutorials*
-
-*Check out the article on [Medium](https://medium.com/panther-labs/aws-security-logging-fundamentals-cloudtrail-c7733789a5dd)*
+*A deep dive into AWS CloudTrail - Check out the article on [Medium](https://medium.com/panther-labs/aws-security-logging-fundamentals-cloudtrail-c7733789a5dd)*
 
 Amazon Web Services offers many services, from virtual machines (EC2) to storage (S3) to databases (RDS). Each of these services adds a new point of entry for potential cyber-attacks. To stay vigilant, security teams must keep a close watch on all activity and changes in AWS accounts.
 
@@ -18,7 +16,7 @@ Before we get started with implementation, let's take a quick look at why CloudT
 # Getting Started
 Before we begin, let's make sure to have the following pre-requisites in place:
 * Install the AWS CLI
-* Clone the panther-labs/tutorials repository
+* Clone the `panther-labs/tutorials` repository
 
 These tools will enable you to configure best-practice CloudTrail infrastructure with predefined CloudFormation templates.
 
@@ -28,7 +26,7 @@ AWS CloudTrail is a service to audit all activity within your AWS account.
 Enabling CloudTrail is critical for understanding the history of account changes and detecting suspicious activity.
 Let's try to dig deeper with an example event:
 
-```json
+```javascript
 {
     "eventVersion": "1.05",
     "userIdentity": {
@@ -68,11 +66,11 @@ Let's try to dig deeper with an example event:
 ```
 
 Here is what we can extract from the message:
-* The ec2 service made the AssumeRole call at 2019–12–10T01:44:26Z
-* The region serving the API call is us-east-1
-* The role being assumed is arn:aws:iam::123456789012:role/S3SecurityDataAssumeRole with the session i-00888ddddd3333322, indicating the EC2 hostname
+* The `ec2` service made the `AssumeRole` call at `2019–12–10T01:44:26Z`
+* The region serving the API call is `us-east-1`
+* The role being assumed is `arn:aws:iam::123456789012:role/S3SecurityDataAssumeRole` with the session `i-00888ddddd3333322`, indicating the EC2 hostname
 * The request was successful, and temporary credentials were returned
-* There was no errorMessage key, also indicating a successful operation
+* There was no `errorMessage` key, also indicating a successful operation
 
 For a deeper understanding of CloudTrail log fields, you'd find the documentation on Record Contents useful.
 
@@ -80,8 +78,8 @@ For a deeper understanding of CloudTrail log fields, you'd find the documentatio
 
 CloudTrail can capture two main types of events:
 
-* Control Plane: Management operations performed on resources. These events apply to all AWS services, and can be configured to capture Read or Write events (e.g., mike created a S3 bucket called production-secrets).
-* Data Plane: Operations performed directly on resources. These types of events are limited to S3 and Lambda specific calls (e.g., jill downloaded a S3 object froms3://production-secrets/app/secret.txt).
+* **Control Plane**: Management operations performed on resources. These events apply to all AWS services, and can be configured to capture Read or Write events (e.g., mike created a S3 bucket called `production-secrets`).
+* **Data Plane**: Operations performed directly on resources. These types of events are limited to S3 and Lambda specific calls (e.g., jill downloaded a S3 object from `s3://production-secrets/app/secret.txt`).
 
 Before enabling data plane logging, be mindful of the pricing implications. Data plane settings must also be explicitly set, whereas the default operation for CloudTrail is to log events from the control plane.
 
@@ -134,7 +132,7 @@ $ aws cloudtrail put-insight-selectors --trail-name <Trail> --insight-selectors 
 ```
 
 Here is an example Insights event:
-```json
+```javascript
 {
   "eventVersion": "1.07",
   "eventTime": "2019-10-15T21:14:00Z",
@@ -202,10 +200,10 @@ To perform more advanced searches of CloudTrail data with a SQL interface, Athen
 In the Athena console, you can now run SQL queries.
 
 # Best Practices and Tips
-* Centralize CloudTrail Logging: Log all accounts into a single S3 Bucket, with the easiest implementation being an organization wide trail.
-* S3 Access Logging: Enable S3 Access logging and tracking for CloudTrail in order to identify exfiltration.
-* Object Locking: For highly compliant environments, enable S3 Object Locking on your S3 Bucket to ensure data cannot not deleted.
-* KMS Encryption: Ensure log files at rest are encrypted with a Customer Managed KMS key to safeguard against unwarranted access.
+* **Centralize CloudTrail Logging**: Log all accounts into a single S3 Bucket, with the easiest implementation being an organization wide trail.
+* **S3 Access Logging**: Enable S3 Access logging and tracking for CloudTrail in order to identify exfiltration.
+* **Object Locking**: For highly compliant environments, enable S3 Object Locking on your S3 Bucket to ensure data cannot not deleted.
+* **KMS Encryption**: Ensure log files at rest are encrypted with a Customer Managed KMS key to safeguard against unwarranted access.
 
 # Conclusion
 In this article, we covered the fundamentals of AWS CloudTrail. This service is critical for understanding your cloud security posture, and provides a wide variety of rich data.

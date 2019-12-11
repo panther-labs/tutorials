@@ -1,0 +1,268 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Configure AWS CloudTrail Logging
+
+Parameters:
+  AccessLogBucketName:
+    Type: String
+    Description: The name of the AWS S3 bucket to send S3 access logs to for auditing.
+    Default: ''
+  BucketID:
+    Type: String
+    Description: The name of the bucket to send to or recieve CloudTrail Logs.
+    MinLength: 3
+    MaxLength: 63
+    AllowedPattern: '[a-z][a-z0-9-]*'
+  CloudWatchDestinationArn:
+    Type: String
+    Default: ''
+    Description: The destination to subscribe logs to.
+  LogPrefix:
+    Type: String
+    Default: ''
+    # Example: bucket_name/prefix_name/AWSLogs/Account ID/CloudTrail/region/YYYY/MM/DD/file_name.json.gz
+    Description: The prefix to use in S3 when CloudTrail writes logs.
+  LogRetentionDays:
+    Type: Number
+    Default: 7
+    Description: The number of days to retain logs in the CloudWatchLog group.
+  MultiRegionTrail:
+    Type: String
+    Default: true
+    Description: Captures events from all regions.
+    AllowedValues:
+      - true
+      - false
+  DecryptPrincipalArn:
+    Type: String
+    Default: ''
+    Description: The principal to grant Decrypt access to for CloudTrail log processing.
+  SnsTopicArn:
+    Type: String
+    Description: The ARN of the SNS topic to send CloudTrail delivery notifications to.
+    Default: ''
+  TrailName:
+    Type: String
+    Description: |
+      The name of the CloudTrail, also used in the CloudWatch Log Group and S3 Bucket naming.
+    # Ref: https://amzn.to/2RpiP2g
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9-]*'
+    MinLength: 3
+    MaxLength: 63
+
+Conditions:
+  DecryptPrincipalArnProvided: !Not
+    - !Equals
+      - !Ref DecryptPrincipalArn
+      - ''
+  EnableBucketLogging: !Not
+    - !Equals
+      - !Ref AccessLogBucketName
+      - ''
+  EnableCWL: !Not
+    - !Equals
+      - !Ref CloudWatchDestinationArn
+      - ''
+  EnableSNS: !Not
+    - !Equals
+      - !Ref SnsTopicArn
+      - ''
+  PrefixProvided: !Not
+    - !Equals
+      - !Ref LogPrefix
+      - ''
+
+Resources:
+  # KMS Key and Alias
+  CloudTrailKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub CloudTrail encryption key for ${TrailName}.
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          -
+            Sid: Enable IAM user permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: '*'
+          -
+            Sid: Allow CloudTrail access
+            Effect: Allow
+            Principal:
+              Service: cloudtrail.amazonaws.com
+            Action: kms:DescribeKey
+            Resource: '*'
+          -
+            Sid: Allow CloudTrail to encrypt logs
+            Effect: Allow
+            Principal:
+              Service: cloudtrail.amazonaws.com
+            Action: kms:GenerateDataKey*
+            Resource: '*'
+            Condition:
+              StringLike:
+                kms:EncryptionContext:aws:cloudtrail:arn: !Sub arn:aws:cloudtrail:*:${AWS::AccountId}:trail/*
+          - !If
+              - DecryptPrincipalArnProvided
+              -
+                # Allow specific AWS principals to decrypt CloudTrail data
+                Sid: Allow IAM Roles to Decrypt Logs
+                Effect: Allow
+                Principal:
+                  AWS: !Ref DecryptPrincipalArn
+                Action: kms:Decrypt
+                Resource: '*'
+                # Else, do nothing.
+              - !Ref AWS::NoValue
+
+  CloudTrailKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${TrailName}Encryption
+      TargetKeyId: !Ref CloudTrailKMSKey
+
+  # S3 Bucket and Policy
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketID
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      ObjectLockEnabled: true
+      ObjectLockConfiguration:
+        ObjectLockEnabled: Enabled
+        Rule:
+          DefaultRetention:
+            Mode: GOVERNANCE
+            Years: 1
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Enabled
+      LoggingConfiguration: !If
+        - EnableBucketLogging
+        - DestinationBucketName: !Ref AccessLogBucketName
+          LogFilePrefix: !Sub ${BucketID}/
+        - !Ref AWS::NoValue
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AWSCloudTrailAclCheck
+            Effect: Allow
+            Principal:
+              Service: cloudtrail.amazonaws.com
+            Action: s3:GetBucketAcl
+            Resource: !GetAtt S3Bucket.Arn
+          - Sid: AWSCloudTrailWrite
+            Effect: Allow
+            Principal:
+              Service: cloudtrail.amazonaws.com
+            Action: s3:PutObject
+            Resource: !If
+              - PrefixProvided
+              - !Sub ${S3Bucket.Arn}/${LogPrefix}/AWSLogs/${AWS::AccountId}/*
+              - !Sub ${S3Bucket.Arn}/AWSLogs/${AWS::AccountId}/*
+            Condition:
+              StringEquals:
+                s3:x-amz-acl: bucket-owner-full-control
+
+  # CloudWatchLogs Setup
+  CloudTrailLogGroup:
+    Type: AWS::Logs::LogGroup
+    Condition: EnableCWL
+    Properties:
+      RetentionInDays: !Ref LogRetentionDays
+      LogGroupName: !Ref TrailName
+
+  CloudWatchLogRole:
+    Type: AWS::IAM::Role
+    Condition: EnableCWL
+    Properties:
+      RoleName: CloudTrailCWL
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AWSCloudTrailAssumeRole
+            Effect: Allow
+            Principal:
+              Service: cloudtrail.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: root
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: AWSCloudTrailPutAndCreateLogStream2014110
+                Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                # You can't directly put events across accounts, but you can subscribe
+                # the created LogGroup to a CloudWatch Destination in another account.
+                Resource: !Sub arn:aws:logs:*:${AWS::AccountId}:log-group:${TrailName}:*
+
+  CloudTrailSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: EnableCWL
+    Properties:
+      DestinationArn: !Ref CloudWatchDestinationArn
+      # FilterPatern is required
+      FilterPattern: ''
+      LogGroupName: !Ref CloudTrailLogGroup
+
+  # CloudTrail
+  CloudTrail:
+    Type: AWS::CloudTrail::Trail
+    Properties:
+      TrailName: !Ref TrailName
+      CloudWatchLogsLogGroupArn: !If
+        - EnableCWL
+        - !GetAtt CloudTrailLogGroup.Arn
+        - !Ref AWS::NoValue
+      CloudWatchLogsRoleArn: !If
+        - EnableCWL
+        - !GetAtt CloudWatchLogRole.Arn
+        - !Ref AWS::NoValue
+      S3BucketName: !Ref S3Bucket
+      IsLogging: true
+      IsMultiRegionTrail: !Ref MultiRegionTrail
+      IncludeGlobalServiceEvents: true
+      S3KeyPrefix: !If
+        - PrefixProvided
+        - !Ref LogPrefix
+        - !Ref AWS::NoValue
+      EnableLogFileValidation: true
+      SnsTopicName: !If
+        - EnableSNS
+        - !Ref SnsTopicArn
+        - !Ref AWS::NoValue
+      KMSKeyId: !Ref CloudTrailKeyAlias
+
+Outputs:
+  BucketArn:
+    Description: The S3 Bucket Arn containing CloudTrail data.
+    Value: !GetAtt S3Bucket.Arn
+  CloudTrailArn:
+    Description: The Arn of the created CloudTrail.
+    Value: !GetAtt CloudTrail.Arn
+  CloudWatchLogGroupArn:
+    Condition: EnableCWL
+    Description: The Arn to the created CloudWatch Log Group for CloudTrail data.
+    Value: !GetAtt CloudTrailLogGroup.Arn
+  KMSKeyArn:
+    Description: The KMS Key Arn used for CloudTrail encryption.
+    Value: !GetAtt CloudTrailKMSKey.Arn

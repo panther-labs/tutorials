@@ -1,0 +1,19 @@
+# Search CloudTrail logs for S3 Put or Get Object requests
+
+SELECT eventname,
+       json_extract(requestparameters, '$.bucketName') AS "bucket",
+       json_extract(requestparameters, '$.key') AS "key",
+       useridentity
+FROM "default"."cloudtrail_logs"
+WHERE eventsource = 's3.amazonaws.com'
+AND eventname IN ('PutObject', 'GetObject')
+and errorcode IS NULL
+LIMIT 10
+
+# Search S3 access logs for distinct requesters to object requests
+
+SELECT DISTINCT requester, COUNT(*) as requester_count
+FROM "default"."s3_access_logs"
+WHERE requester != '-'
+GROUP BY requester
+ORDER BY COUNT(*) DESC

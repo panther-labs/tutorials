@@ -1,6 +1,6 @@
 # Tutorial: Securing Multi-Account Access on AWS
 
-*Check out the article on [Medium](https://medium.com/panther-labs/tutorial-securing-multi-account-access-on-aws-763c968bd4ce)*
+*Check out the article on [our blog](https://blog.runpanther.io/secure-multi-account-aws-access/)*
 
 As a company’s cloud footprint grows, it becomes increasingly important for security teams to effectively centralize and provide secure access to the cloud. Organizations across the globe are realizing the importance of investing in safer and robust programmatic access to the cloud. This ensures that cloud security investments are aligned to the most cutting-edge security best practices to mitigate current and future challenges.
 

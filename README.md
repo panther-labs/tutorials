@@ -2,9 +2,10 @@
 
 | Blog        | Code           
 | ------------- |:-------------:|
-| [Securing Multi-Account Access on AWS](https://medium.com/panther-labs/tutorial-securing-multi-account-access-on-aws-763c968bd4ce)      | [aws-vault](https://github.com/panther-labs/tutorials/tree/master/aws-vault) |
-| [EC2 Security Log Collection the Cloud-Native Way](https://medium.com/panther-labs/cloud-native-security-log-collection-d005cbc78665)      | [cloud-native-logging](https://github.com/panther-labs/tutorials/tree/master/cloud-native-logging) |   |   |
-| [AWS Security Logging Fundamentals - CloudTrail](https://medium.com/panther-labs/aws-security-logging-fundamentals-cloudtrail-c7733789a5dd)      | [aws-security-logging](https://github.com/panther-labs/tutorials/tree/master/aws-security-logging) |   |   |
+| [Securing Multi-Account Access on AWS](https://blog.runpanther.io/secure-multi-account-aws-access/)      | [aws-vault](https://github.com/panther-labs/tutorials/tree/master/aws-vault) |
+| [EC2 Security Log Collection the Cloud-Native Way](https://blog.runpanther.io/cloud-native-security-log-collection/)      | [cloud-native-logging](https://github.com/panther-labs/tutorials/tree/master/cloud-native-logging) |   |   |
+| [AWS Security Logging Fundamentals - CloudTrail](https://blog.runpanther.io/aws-cloudtrail-fundamentals/)      | [aws-security-logging](https://github.com/panther-labs/tutorials/tree/master/aws-security-logging) |   |   |
+| [AWS Security Logging Fundamentals - S3 Bucket Access Logging](https://blog.runpanther.io/s3-bucket-access-logging/)      | [aws-security-logging](https://github.com/panther-labs/tutorials/tree/master/aws-security-logging) |   |   |
 
 ## Usage
 

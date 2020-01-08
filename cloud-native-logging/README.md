@@ -2,7 +2,7 @@
 
 How to utilize modern logging and Serverless technology to jump start your security logging pipeline.
 
-*Check out the article on [Medium](https://medium.com/panther-labs/cloud-native-security-log-collection-d005cbc78665)*
+*Check out the article on [our blog](https://blog.runpanther.io/cloud-native-security-log-collection/)*
 
 To detect and prevent security breaches, security teams must understand everything that is happening in the environment. The primary way to accomplish this is by collecting and analyzing log events, which provide information on activity within a system.
 

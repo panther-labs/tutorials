@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  A S3 bucket to receive S3 Access Logs.
+  This stack can also be configured to send S3 event notifications to an event Queue.
+
+Parameters:
+  EventQueueArn:
+    Type: String
+    Description: The SQS Queue Arn to configure notifications to send to.
+    Default: ''
+  LifeCycleStatus:
+    Type: String
+    Description: Enable or disable transitions to IA/Glacier along with expiration.
+    Default: Disabled
+    AllowedValues:
+      - Enabled
+      - Disabled
+
+Conditions:
+  EnableNotifications: !Not [!Equals [!Ref EventQueueArn, '']]
+
+Resources:
+  AccessLogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::AccountId}-s3-access-logs-${AWS::Region}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      AccessControl: LogDeliveryWrite
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          -
+            Id: MoveToStandardIA
+            Status: !Ref LifeCycleStatus
+            Transition:
+              StorageClass: STANDARD_IA
+              TransitionInDays: 30
+          -
+            Id: MoveToGlacier
+            Status: !Ref LifeCycleStatus
+            Transition:
+              StorageClass: GLACIER
+              TransitionInDays: 90
+          -
+            Id: ExpireAfter1Year
+            Status: !Ref LifeCycleStatus
+            ExpirationInDays: 365
+            NoncurrentVersionExpirationInDays: 30
+      NotificationConfiguration:
+        QueueConfigurations:
+          - !If
+              - EnableNotifications
+              - Event: s3:ObjectCreated:*
+                Queue: !Ref EventQueueArn
+              - !Ref AWS::NoValue
+
+Outputs:
+  BucketArn:
+    Description: The S3 Access Logs Bucket Arn.
+    Value: !GetAtt AccessLogsBucket.Arn
+    Export:
+      Name: AccessLogging-BucketArn
+  BucketName:
+    Description: The S3 Access Logs Bucket Name.
+    Value: !Ref AccessLogsBucket
+    Export:
+      Name: AccessLogging-BucketName

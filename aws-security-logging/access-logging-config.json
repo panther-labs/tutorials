@@ -1,0 +1,6 @@
+{
+  "LoggingEnabled": {
+    "TargetBucket": "<AccountId>-s3-access-logs-<Region>",
+    "TargetPrefix": "<Source-Bucket-Name>/"
+  }
+}

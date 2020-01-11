@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Panther Public S3 bucket for Lambda source code
+
+Parameters:
+  BucketNamePattern:
+    Type: String
+    Default: panther-public-lambda-source
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${BucketNamePattern}-${AWS::Region}'
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Enabled
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Statement:
+          -
+            Sid: AllowServerlessRepoToGetSourceCode
+            Action:
+              - 's3:GetObject'
+            Effect: Allow
+            Resource: !Join [ "", [!GetAtt Bucket.Arn, "/*"] ]
+            Principal:
+              Service: serverlessrepo.amazonaws.com
+
+Outputs:
+  BucketName:
+    Description: The name of the S3 Bucket.
+    Value: !Ref Bucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketName'
+  BucketArn:
+    Description: The Arn of the S3 Bucket.
+    Value: !GetAtt 'Bucket.Arn'
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketArn'

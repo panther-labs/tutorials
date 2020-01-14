@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: A Sample Hello-World SAR Application
+
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: sample-application
+      Description: A sample SAR application
+      Handler: index.main
+      InlineCode: |
+        import os
+
+        def main(event, context):
+          name = os.getenv('NAME', event.get('name', 'world'))
+          print('Hello, {}!'.format(name))
+      Runtime: python3.7
+      MemorySize: 128
+      Timeout: 10
+      Environment:
+        Variables:
+          NAME: Panther

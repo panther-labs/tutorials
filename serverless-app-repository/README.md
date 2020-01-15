@@ -1,5 +1,7 @@
 # AWS Serverless Application Repository: Lambda and Beyond
 
+*Create, discover, and deploy serverless applications with the AWS SAR*
+
 Check out this article on [our blog.](https://blog.runpanther.io/serverless-app-repo-intro/)
 
 Serverless computing is a great way to run your applications without the need for provisioning or managing servers. It makes everything simple—write your code, set the compute resources, and invoke it using the serverless platform. Here’s a quick refresher of some of serverless’ key benefits:

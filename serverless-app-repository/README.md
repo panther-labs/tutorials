@@ -99,7 +99,6 @@ Resources:
       Environment:
         Variables:
           NAME: Panther
-
 ```
 
 SAM templates are just like any other CloudFormation template, except you can define one or more serverless resource types. SAM currently supports the following six resources:
@@ -125,14 +124,12 @@ Next, you will need to create a S3 Bucket to store packaged Lambda code in order
 Run the following command from the tutorials folder:
 
 ```
-​```bash
 make deploy \
-  stack=lambda-source-bucket \
-  tutorial=serverless-app-repository \
-  region=us-east-1
-​```
-
+  stack=lambda-source-bucket \
+  tutorial=serverless-app-repository \
+  region=us-east-1
 ```
+
 
 This bucket has a policy to grant `serverlessrepo.amazonaws.com` GetObject access on anything within the bucket.
 
@@ -148,9 +145,7 @@ sam package \
 	--region us-east-1 \
 	--s3-bucket <YOUR-ACCOUNT-ID>-lambda-source-us-east-1 \
 	--s3-prefix sample-application
-
 ```
-
 If custom dependencies (this example is Python-specific) need to be built into the application, add the following command before the SAM package command above:
 
 ```
@@ -172,11 +167,9 @@ aws serverlessrepo create-application \
 	--region “us-east-1” \
 	--semantic-version “0.1.0” \
 	--template-body file://.out/sample-application-out.yml
-
 ```
 
 To list all published applications, run this command:
-
 ```
 $ aws serverlessrepo list-applications --region us-east-1
 {
@@ -192,7 +185,6 @@ $ aws serverlessrepo list-applications --region us-east-1
         }
     ]
 }
-
 ```
 
 This application is also viewable from the [Serverless Application Repository Console](https://console.aws.amazon.com/serverlessrepo/home?region=us-east-1#/published-applications) as shown in the following screenshot:
@@ -225,6 +217,7 @@ In this section, we’ll show you how to deploy SAR applications. There are thre
 This is the recommended option because users can simply navigate to the [Serverless Application Repository](https://us-west-2.console.aws.amazon.com/serverlessrepo/home?region=us-west-2#/available-applications) in the AWS Console to search and select any available application of their choice as shown in the screenshot below. Note how all publicly available applications are visible:
 
 ![img](https://lh6.googleusercontent.com/L-e9_N06l1tx0Al5XzTBCYnv1mDpdw-iFPoowrnHmzcwBBETkQPPTix9NaFgtQzHW2l1qPHbY1cU2grNsB4KvD9j7XL5us9EiHwYt-fGTnnFMyWWgCYsN2lupsVfhnD4SQIsQvgH)
+
 ## Using CloudFormation
 
 To deploy a SAR application using CloudFormation, use the `AWS::Serverless::Application` resource as demonstrated below:
@@ -237,7 +230,6 @@ Resources:
       Location:
         ApplicationId: arn:aws:serverlessrepo:us-east-1:012345678901:applications/sample-application
         SemanticVersion: 0.1.0
-
 ```
 
 This will install version 0.1.0 of our sample-application.

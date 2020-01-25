@@ -15,3 +15,7 @@ This repo contains a `Makefile` with commands to use or deploy the provided code
 ```bash
 $ make deploy tutorial=<FOLDER> stack=<CLOUDFORMATION-FILENAME> region=<REGION>
 ```
+
+## License
+
+[Apache](https://choosealicense.com/licenses/apache-2.0/)

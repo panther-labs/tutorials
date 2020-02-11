@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Generic template to send VPC flow logs to CloudWatch Logs
+
+Parameters:
+  VpcId:
+    Type: String
+    Description: The ID of the VPC to capture flow log data from
+
+Resources:
+  FlowLogRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: !Sub vpc-flow-logs.${AWS::URLSuffix}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CloudWatchPutLogs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: '*'
+
+  FlowLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: VPCFlowLogs
+      RetentionInDays: 365
+
+  FlowLog:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      DeliverLogsPermissionArn: !GetAtt FlowLogRole.Arn
+      LogGroupName: !Ref FlowLogGroup
+      # The ID of the subnet, network interface, or VPC
+      ResourceId: !Ref VpcId
+      # The type of resource: NetworkInterface, Subnet, or VPC
+      ResourceType: VPC
+      # ACCEPT | ALL | REJECT
+      TrafficType: ALL

@@ -285,8 +285,6 @@ To create an Athena table:
    TBLPROPERTIES ("skip.header.line.count"="1");
    ```
 
-   
-
 2. Modify the `LOCATION` `'s3://example_bucket/prefix/AWSLogs/{subscribe_account_id}/vpcflowlogs/{region_code}/`' to point to the Amazon S3 bucket that contains your log data.
 
 3. Next, you will have to run the query in the Athena console. Once the query completes, Athena registers the `vpc_flow_logs` table, making the data in it ready for you to issue queries.

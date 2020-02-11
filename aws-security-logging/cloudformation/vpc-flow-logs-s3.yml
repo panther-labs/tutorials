@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >
+  Generic template to send VPC flow logs to S3
+
+Parameters:
+  EnableKMSEncryption:
+    Type: String
+    Default: Disabled
+    AllowedValues:
+      - Enabled
+      - Disabled
+  VpcId:
+    Type: String
+    Description: The VPC ID to capture flow log data from
+
+Conditions:
+  KMSEncryptionEnabled: !Equals
+    - !Ref EnableKMSEncryption
+    - Enabled
+
+Resources:
+  FlowLog:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      LogDestinationType: s3
+      LogDestination: !GetAtt FlowLogsBucket.Arn
+      # The ID of the subnet, network interface, or VPC
+      ResourceId: !Ref VpcId
+      # The type of resource: NetworkInterface, Subnet, or VPC
+      ResourceType: VPC
+      # ACCEPT | ALL | REJECT
+      TrafficType: ALL
+
+  FlowLogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: !If
+            - KMSEncryptionEnabled
+            - KMSMasterKeyID: !Ref FlowLogKey
+              SSEAlgorithm: aws:kms
+            - SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Enabled
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FlowLogsBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Sid: AWSLogDeliveryWrite
+            Effect: Allow
+            Principal:
+              Service: !Sub delivery.logs.${AWS::URLSuffix}
+            Action: s3:PutObject
+            Resource: !Sub ${FlowLogsBucket.Arn}/*/AWSLogs/*/*
+            Condition:
+              StringEquals:
+                s3:x-amz-acl: bucket-owner-full-control
+          -
+            Sid: AWSLogDeliveryAclCheck
+            Effect: Allow
+            Principal:
+              Service: !Sub delivery.logs.${AWS::URLSuffix}
+            Action: s3:GetBucketAcl
+            Resource: !GetAtt FlowLogsBucket.Arn
+
+  FlowLogKey:
+    Type: AWS::KMS::Key
+    Condition: KMSEncryptionEnabled
+    Properties:
+      Description: VPC flow log encryption key
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          -
+            Sid: Enable IAM user permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: '*'
+          -
+            Sid: Allow Log Delivery key access
+            Effect: Allow
+            Principal:
+              Service: !Sub delivery.logs.${AWS::URLSuffix}
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: '*'
+
+  FlowLogKeyAlias:
+    Type: AWS::KMS::Alias
+    Condition: KMSEncryptionEnabled
+    Properties:
+      AliasName: alias/VPCFlowLogEncryption
+      TargetKeyId: !Ref FlowLogKey

@@ -7,6 +7,7 @@
 | [AWS Security Logging Fundamentals - CloudTrail](https://blog.runpanther.io/aws-cloudtrail-fundamentals/)      | [aws-security-logging](https://github.com/panther-labs/tutorials/tree/master/aws-security-logging) |   |   |
 | [AWS Security Logging Fundamentals - S3 Bucket Access Logging](https://blog.runpanther.io/s3-bucket-access-logging/)      | [aws-security-logging](https://github.com/panther-labs/tutorials/tree/master/aws-security-logging) |   |   |
 | [AWS Serverless Application Repository: Lambda and Beyond](https://blog.runpanther.io/serverless-app-repo-intro/)         | [serverless-app-repository](https://github.com/panther-labs/tutorials/tree/master/serverless-app-repository) |   |   |     
+| [AWS Security Logging Fundamentals - VPC Flow Logs](http://blog.runpanther.io/aws-security-logging-vpc-flow-logs/)         | [aws-security-logging](https://github.com/panther-labs/tutorials/tree/master/aws-security-logging) |   |   |  
 
 ## Usage
 
